@@ -3,6 +3,9 @@ from tkinter import ttk, messagebox
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import yfinance as yf
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PositionTracker import PositionTracker
 from Backtester import Backtester
 
@@ -26,6 +29,50 @@ class PositionTrackerApp:
         
         # List to store entry fields
         self.entry_fields = []
+
+        # Add plot button to results frame
+        ttk.Button(self.results_frame, text="Plot Portfolio Value", 
+                 command=self.plot_portfolio_value).pack(pady=10)
+
+    def plot_portfolio_value(self):
+        """Calculate and plot portfolio value over time"""
+        try:
+            # Get portfolio history and current positions
+            df = self.portfolio.get_portfolio()
+            if df.empty:
+                messagebox.showinfo("Info", "No transactions to plot")
+                return
+
+            # Get unique tickers and date range
+            tickers = df.columns.tolist()
+            start_date = df.index.min().strftime('%Y-%m-%d')
+            end_date = df.index.max().strftime('%Y-%m-%d')
+
+            # Fetch historical prices from Yahoo Finance
+            price_data = yf.download(tickers, start=start_date, end=end_date)['Close']
+            price_data = price_data.reindex(df.index).ffill()  # Align dates with positions
+
+            # Calculate daily portfolio value
+            portfolio_value = (df * price_data).sum(axis=1)
+
+            # Create plot
+            fig = plt.Figure(figsize=(10, 4), dpi=100)
+            ax = fig.add_subplot(111)
+            ax.plot(portfolio_value.index, portfolio_value)
+            ax.set_title('Portfolio Value Over Time')
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Value (USD)')
+            ax.grid(True)
+
+            # Embed plot in Tkinter window
+            plot_window = tk.Toplevel(self.master)
+            plot_window.title("Portfolio Performance")
+            canvas = FigureCanvasTkAgg(fig, master=plot_window)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        except Exception as e:
+            messagebox.showerror("Plot Error", f"Failed to generate plot: {str(e)}")
         
     def create_input_ui(self):
         """Create transaction input interface"""
@@ -101,29 +148,33 @@ class PositionTrackerApp:
         # Hide input UI
         for widget in self.main_frame.winfo_children():
             widget.pack_forget()
-        
-        # Create results treeview
+            
+        # Show results frame
         self.results_frame.pack(fill=tk.BOTH, expand=True)
         
         # Get portfolio data
         df = self.portfolio.get_portfolio()
         
+        # Reset index to include date as a column
+        df_with_date = df.reset_index()
+        
+        # Create new column list with "Date" first
+        new_columns = ['Date'] + df.columns.tolist()
+        df_with_date.columns = new_columns  # This matches column count
+        
         # Create treeview
         tree = ttk.Treeview(self.results_frame)
-        tree["columns"] = list(df.columns)
+        tree["columns"] = new_columns
         tree["show"] = "headings"
         
         # Configure columns
-        tree.heading("#0", text="Date")
-        for col in df.columns:
+        for col in new_columns:
             tree.heading(col, text=col)
-            tree.column(col, width=80, anchor=tk.CENTER)
-        
+            tree.column(col, width=120, anchor=tk.CENTER)
+            
         # Insert data
-        for index, row in df.iterrows():
-            date_str = index.strftime('%Y-%m-%d')
-            values = [int(row[col]) for col in df.columns]
-            tree.insert("", tk.END, text=date_str, values=values)
+        for _, row in df_with_date.iterrows():
+            tree.insert("", tk.END, values=list(row))
         
         # Add scrollbar
         vsb = ttk.Scrollbar(self.results_frame, orient="vertical", command=tree.yview)
@@ -134,8 +185,12 @@ class PositionTrackerApp:
         vsb.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Add back button & Run Backtest button
-        ttk.Button(self.results_frame, text="New Session",
+        ttk.Button(self.results_frame, text="New Session", 
                  command=self.reset_app).pack(pady=10)
+         # Add plot button to results frame
+        ttk.Button(self.results_frame, text="Plot Portfolio Value", 
+                command=self.plot_portfolio_value).pack(pady=10)
+        
         ttk.Button(self.results_frame, text="Run Backtest",
                  command=self.run_backtest).pack(pady=10)
         
@@ -170,7 +225,6 @@ class PositionTrackerApp:
         
         # plot results
         backtester.plot_results()
-
 
     def reset_app(self):
         """Reset the application for new session"""
