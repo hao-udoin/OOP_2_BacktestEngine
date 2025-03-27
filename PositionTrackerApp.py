@@ -236,11 +236,11 @@ class PositionTrackerApp:
 
     def _get_dummy_price_data(self, df):
         """Generate dummy stock price data for testing"""
-        np.random.seed(42)  # 設定隨機種子，確保結果一致
-        tickers = list(df.columns)  # 取得所有持倉的股票代碼
-        dates = df.index  # 獲取日期範圍
+        np.random.seed(42)  
+        tickers = list(df.columns)  
+        dates = df.index  
 
-        # 生成隨機價格（初始價格 100，每日變動最多 2%）
+        # Generate random prices (starting at 100, daily change up to 2%)
         dummy_prices = pd.DataFrame(
             100 * (1 + np.random.randn(len(dates), len(tickers)) * 0.02).cumprod(axis=0),
             index=dates, columns=tickers
