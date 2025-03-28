@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -52,6 +52,8 @@ class PositionTrackerApp:
         self.strategy_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         self.create_backtest_controls(self.strategy_frame)
         ttk.Button(self.strategy_frame, text="Run Backtest", command=self.run_backtest).pack(pady=10)
+        ttk.Button(self.strategy_frame, text="Export Results", command=self.trigger_export).pack(pady=5)
+
 
     # Create input UI for transactions
     def create_input_ui(self):
@@ -234,7 +236,7 @@ class PositionTrackerApp:
         self.bt_ticker_entry.grid(row=1, column=0, padx=5)
         self.bt_start_entry.grid(row=1, column=1, padx=5)
         self.bt_end_entry.grid(row=1, column=2, padx=5)
-        self.strategy_combo.grid(row=1, column=3, padx=5)
+        self.strategy_combo.grid(row=1, column=3, padx=5) 
 
     # Run backtest for selected strategy (SMA Crossover or Linear Regression)
     def run_backtest(self):
@@ -276,6 +278,13 @@ class PositionTrackerApp:
             signals = strategy.generate_signals()
             simulated_df[ticker] = signals['signal']
 
+        # Adding trade cost and slippage to the backtest
+        trade_cost_rate = 0.015 
+        price_data_adj = price_data * (1 - trade_cost_rate)
+
+        self.simulated_df = simulated_df
+        self.price_data_adj = price_data_adj
+
         backtester = Backtester(simulated_df, price_data)
         metrics = backtester.calculate_metrics()
 
@@ -285,6 +294,32 @@ class PositionTrackerApp:
                             f"Sharpe Ratio: {metrics['Sharpe Ratio']:.2f}")
 
         backtester.plot_results()
+
+    # Export results to CSV
+    def trigger_export(self):
+        try:
+            ticker_input = self.bt_ticker_entry.get()
+            tickers = [t.strip().upper() for t in ticker_input.split(',') if t.strip()]
+            if not hasattr(self, 'simulated_df') or not hasattr(self, 'price_data_adj'):
+                messagebox.showwarning("Warning", "Please run a backtest first.")
+                return
+            self.export_results(self.simulated_df, self.price_data_adj)
+        except Exception as e:
+            messagebox.showerror("Export Error", str(e))
+
+    def export_results(self, signals_df, prices_df):
+        try:
+            export_path = filedialog.asksaveasfilename(defaultextension=".csv",
+                                                       filetypes=[("CSV files", "*.csv")],
+                                                       title="Save Backtest Results")
+            if export_path:
+                combined = signals_df.copy()
+                for col in prices_df.columns:
+                    combined[f"Price_{col}"] = prices_df[col]
+                combined.to_csv(export_path)
+                messagebox.showinfo("Export", f"Results saved to {export_path}")
+        except Exception as e:
+            messagebox.showerror("Export Error", f"Could not save file: {str(e)}")
 
 
     # Add a method to reset the application for a new session
