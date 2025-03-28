@@ -213,7 +213,6 @@ class PositionTrackerApp:
         
 
 
-
     # Create backtest controls for strategy tab
     def create_backtest_controls(self, parent):
         control_frame = ttk.Frame(parent)
@@ -222,20 +221,27 @@ class PositionTrackerApp:
         ttk.Label(control_frame, text="Backtest Tickers (comma separated):").grid(row=0, column=0, padx=5)
         ttk.Label(control_frame, text="Start Date (YYYY-MM-DD):").grid(row=0, column=1, padx=5)
         ttk.Label(control_frame, text="End Date (YYYY-MM-DD):").grid(row=0, column=2, padx=5)
+        ttk.Label(control_frame, text="Strategy:").grid(row=0, column=3, padx=5)
 
         self.bt_ticker_entry = ttk.Entry(control_frame, width=20)
         self.bt_start_entry = ttk.Entry(control_frame, width=12)
         self.bt_end_entry = ttk.Entry(control_frame, width=12)
+        self.strategy_var = tk.StringVar()
+        self.strategy_combo = ttk.Combobox(control_frame, textvariable=self.strategy_var, state="readonly",
+                                           values=["SMA Crossover", "Linear Regression"])
+        self.strategy_combo.current(0)
 
         self.bt_ticker_entry.grid(row=1, column=0, padx=5)
         self.bt_start_entry.grid(row=1, column=1, padx=5)
         self.bt_end_entry.grid(row=1, column=2, padx=5)
+        self.strategy_combo.grid(row=1, column=3, padx=5)
 
     # Run backtest for selected strategy (SMA Crossover)
     def run_backtest(self):
         ticker_input = self.bt_ticker_entry.get()
         start_date = self.bt_start_entry.get()
         end_date = self.bt_end_entry.get()
+        strategy_choice = self.strategy_var.get()
 
         if not ticker_input or not start_date or not end_date:
             messagebox.showerror("Error", "Please enter tickers and date range.")
@@ -253,8 +259,20 @@ class PositionTrackerApp:
         simulated_df = pd.DataFrame(index=price_data.index)
 
         for ticker in tickers:
-            single_price = pd.DataFrame({"Close": price_data[ticker]})
-            strategy = SMACrossoverStrategy(single_price, short_window=5, long_window=20)
+            single_price = pd.DataFrame({"Close": price_data[ticker],
+                                         "Open": price_data[ticker],
+                                         "High": price_data[ticker],
+                                         "Low": price_data[ticker],
+                                         "Volume": np.random.randint(1000000, 5000000, size=len(price_data))})
+
+            if strategy_choice == "SMA Crossover":
+                strategy = SMACrossoverStrategy(single_price, short_window=5, long_window=20)
+            elif strategy_choice == "Linear Regression":
+                strategy = LinearRegressionStrategy(single_price)
+            else:
+                messagebox.showerror("Error", "Invalid strategy selected.")
+                return
+
             signals = strategy.generate_signals()
             simulated_df[ticker] = signals['signal']
 
