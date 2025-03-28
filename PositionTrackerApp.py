@@ -236,7 +236,7 @@ class PositionTrackerApp:
         self.bt_end_entry.grid(row=1, column=2, padx=5)
         self.strategy_combo.grid(row=1, column=3, padx=5)
 
-    # Run backtest for selected strategy (SMA Crossover)
+    # Run backtest for selected strategy (SMA Crossover or Linear Regression)
     def run_backtest(self):
         ticker_input = self.bt_ticker_entry.get()
         start_date = self.bt_start_entry.get()
