@@ -302,6 +302,8 @@ class PositionTrackerApp:
                 return
 
             signals = strategy.generate_signals()
+            if isinstance(signals, pd.Series):
+                signals = pd.DataFrame({'signal': signals})
             simulated_df[ticker] = signals['signal']
 
         # Adding trade cost and slippage to the backtest
@@ -361,4 +363,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = PositionTrackerApp(root)
     root.mainloop()
-

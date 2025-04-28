@@ -14,61 +14,51 @@ This project integrates multiple components for designing, testing, and evaluati
 
 ## Achievements
 
-- Modularized signal generation using object-oriented design.
-- Implemented risk controls, including position sizing and stop-loss mechanisms.
-- Integrated mean-variance portfolio optimization (with and without shorting).
-- Developed performance metrics including Sharpe ratio, maximum drawdown, VaR, and CVaR.
-- Created a GUI application for manual position tracking with visualization.
+* Modularized technical indicator-based strategy development using object-oriented design.
+* Built a multi-strategy backtesting environment supporting **dynamic strategy selection** (9 strategies implemented).
+* Developed a GUI application for **manual portfolio tracking** and  **strategy backtesting** , including performance plots.
+* Implemented key performance metrics:  **Cumulative Return** ,  **Max Drawdown** , and  **Sharpe Ratio** .
+* Added basic **transaction cost** adjustment in the backtesting flow (fixed-rate slippage model).
 
 ---
 
 ## Challenges Faced
 
-1. **Data Alignment Across Modules:**
-   - Ensuring **synchronized timestamps** between signal generation, position tracking, and price data for backtesting.
-
-2. **Risk-Return Tradeoff Complexity:**
-   - **Combining tactical trading signals with portfolio-level optimization** (mean-variance) without overriding individual strategy logic.
-
-3. **Stop-loss and Risk Metrics Integration:**
-   - Balancing **per-trade stop-loss logic** with **portfolio-level risk metrics** like VaR and CVaR can be non-trivial, especially in overlapping trades.
-
-4. **Limited Support for Multi-Asset Allocation:**
-   - Current strategies are **single-asset focused**, while risk management and optimizers are designed for **multi-asset portfolios**.
-
-5. **GUI-Quant Integration:**
-   - The **Tkinter GUI (PositionTrackerApp.py)** operates independently from the quantitative modules, limiting seamless end-to-end automation.
+1. **Signal-Execution Alignment:**
+   * Required **careful shifting of trading signals** to simulate realistic execution on the next day's open.
+2. **GUI and Quantitative Logic Separation:**
+   * GUI was initially isolated; now partially integrated with strategy testing but **full end-to-end automation** is not complete.
+3. **Strategy-Specific Data Requirements:**
+   * Some strategies need full OHLCV data (e.g., MACD, ATR Breakout), requiring  **consistent data fetching and handling** .
+4. **Handling Missing Data:**
+   * Real-world Yahoo Finance data often includes missing fields; strategies must be robust to  **NaN values** .
+5. **Transaction Cost Simplification:**
+   * Trade cost currently assumed  **fixed 1.5%** , **dynamic slippage modeling** is still pending.
 
 ---
 
 ## Future Work
 
-1. **Enhanced Backtesting Features:**
-   - Add **transaction cost modeling**, **slippage**, and **leverage constraints**.
-   - Include **position sizing logic in the backtest loop**.
-
+1. **Enhanced Backtesting Engine:**
+   * Add **dynamic position sizing** instead of fixed holdings.
+   * Improve **transaction cost models** (different rates for buying/selling, spread impact).
 2. **Advanced Risk Metrics:**
-   - Incorporate **Conditional Drawdown at Risk (CDaR)** and **Omega Ratio** for deeper risk evaluation.
-   - Extend **VaR/CVaR** to **multi-asset** portfolios.
-
-3. **Strategy Enhancements:**
-   - Implement **multi-factor strategies** blending momentum, volatility, and mean-reversion signals.
-   - Explore **machine learning models** (XGBoost, LSTM) for adaptive signal generation.
-
-4. **Portfolio Optimization Extensions:**
-   - Integrate **risk parity**, **Black-Litterman models**, or **robust optimization**.
-   - Support **dynamic rebalancing schedules** based on changing market regimes.
-
-5. **Unified Framework with GUI:**
-   - Expand the GUI to **incorporate signal generation and backtesting results** (not just manual transaction tracking).
-   - Visualize **risk metrics (VaR/CVaR plots, drawdown curves)** directly in the app.
-
-6. **Performance Monitoring:**
-   - Develop real-time **dashboarding** (e.g., with **Dash** or **Streamlit**) to monitor live strategy performance alongside risk metrics.
+   * Implement  **VaR** ,  **CVaR** , and  **Conditional Drawdown at Risk (CDaR)** .
+   * Extend Sharpe Ratio calculation to **adjust for risk-free rates** properly.
+3. **Strategy Expansion:**
+   * Add **Multi-Factor Strategies** (e.g., combining RSI + MACD + OBV).
+   * Explore **basic ML strategies** (e.g., XGBoost classifiers for signal generation).
+4. **GUI Upgrade:**
+   * Allow users to **customize strategy parameters** (e.g., SMA short/long window, RSI window, ATR multiplier) directly from the GUI.
+   * Integrate **performance reports and plots** into the app (no external matplotlib pop-up).
+5. **Portfolio Optimization (Longer Term):**
+   * Incorporate **mean-variance optimization** and **risk budgeting** for rebalancing.
+   * Allow **multi-asset portfolio backtesting** with diversified signals.
+6. **Automated Testing:**
+   * Create a `test_project.py` to **unit test** major modules, especially TradingStrategy and Backtester classes.
 
 ---
 
 ## Conclusion
 
-This framework provides a solid foundation for **strategy research, risk management, and portfolio evaluation**. While core components are functional, there is room for improvement in **integration, scalability, and risk analysis depth**. Future enhancements aim to bridge the gap between tactical trading signals and portfolio-level risk control for robust real-world deployments.
-
+This project provides a solid foundation for  **technical strategy research** ,  **manual portfolio tracking** , and  **performance evaluation** . While already functional, further improvements in  **risk modeling** ,  **realistic execution simulation** , and **GUI-quant integration** will help move toward a professional-grade trading research platform.
