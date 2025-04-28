@@ -50,3 +50,5 @@ class Backtester:
         plt.legend()
         plt.grid()
         plt.show()
+
+
