@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PositionTracker import PositionTracker
 from Backtester import Backtester
+from riskmanage import RiskManager 
 from TradingStrategy import (
     SMACrossoverStrategy, 
     LinearRegressionStrategy, 
@@ -320,6 +321,21 @@ class PositionTrackerApp:
                             f"Cumulative Return: {metrics['Cumulative Return']:.2%}\n"
                             f"Max Drawdown: {metrics['Max Drawdown']:.2%}\n"
                             f"Sharpe Ratio: {metrics['Sharpe Ratio']:.2f}")
+        
+        # run RiskManager
+        risk_manager = RiskManager(portfolio_value=10000)
+        daily_returns = backtester.portfolio_value.pct_change().dropna()
+        var, cvar = risk_manager.calculate_var_cvar(daily_returns, confidence_level=0.05)
+        max_drawdown = risk_manager.calculate_max_drawdown(backtester.portfolio_value)
+
+        
+        messagebox.showinfo("Backtest & Risk Analysis Results",
+                            f"Cumulative Return: {metrics['Cumulative Return']:.2%}\n"
+                            f"Max Drawdown (Backtest): {metrics['Max Drawdown']:.2%}\n"
+                            f"Sharpe Ratio: {metrics['Sharpe Ratio']:.2f}\n\n"
+                            f"VaR (5%): {var:.2%}\n"
+                            f"CVaR (5%): {cvar:.2%}\n"
+                            f"Max Drawdown (Risk Analysis): {max_drawdown:.2%}")
 
         backtester.plot_results()
 
